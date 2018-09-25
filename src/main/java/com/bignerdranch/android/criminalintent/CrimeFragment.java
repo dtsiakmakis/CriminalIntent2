@@ -41,7 +41,9 @@ import android.widget.TextView;
 import com.google.android.gms.vision.Frame;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
@@ -67,6 +69,7 @@ public class CrimeFragment extends Fragment {
     private ImageView mPhotoView4;
     private CheckBox faceCheckBox;
     private TextView faceText;
+    List<Bitmap> bitmaps = new ArrayList<>();
 
 
 
@@ -196,6 +199,9 @@ public class CrimeFragment extends Fragment {
         });
 
         mPhotoView = (ImageView) v.findViewById(R.id.crime_photo);
+        mPhotoView2 = (ImageView) v.findViewById(R.id.crime_photo2);
+        mPhotoView3 = (ImageView) v.findViewById(R.id.crime_photo3);
+        mPhotoView4 = (ImageView) v.findViewById(R.id.crime_photo4);
         updatePhotoView();
 
         return v;
@@ -275,10 +281,23 @@ public class CrimeFragment extends Fragment {
     private void updatePhotoView() {
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
+            mPhotoView2.setImageDrawable(null);
+            mPhotoView3.setImageDrawable(null);
+            mPhotoView4.setImageDrawable(null);
         } else {
             Bitmap bitmap = PictureUtils.getScaledBitmap(
                     mPhotoFile.getPath(), getActivity());
-            mPhotoView.setImageBitmap(bitmap);
+            bitmaps.add(bitmap);
+            mPhotoView.setImageBitmap(bitmaps.get(0));
+            if (bitmaps.size() == 2){
+                mPhotoView2.setImageBitmap(bitmaps.get(1));
+            }
+            if (bitmaps.size() == 3){
+                mPhotoView3.setImageBitmap(bitmaps.get(2));
+            }
+            if (bitmaps.size() == 4){
+                mPhotoView4.setImageBitmap(bitmaps.get(3));
+            }
         }
     }
 }
