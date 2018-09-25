@@ -43,4 +43,22 @@
         android:text="@string/crime_report_text"
         />
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Previous Images"
+        android:layout_marginLeft="20dp"/>
+
+    <include
+        layout="@layout/camera_photos"
+        android:layout_width="match_parent"
+        android:layout_height="80dp" />
+
+    <include
+        layout="@layout/face_detect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp" />
+
 </LinearLayout>
