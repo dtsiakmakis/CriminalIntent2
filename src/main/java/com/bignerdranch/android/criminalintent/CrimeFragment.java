@@ -1,30 +1,24 @@
 package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.hardware.camera2.params.Face;
-import android.media.FaceDetector;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateFormat;
-import android.util.SparseArray;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,13 +32,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
-import com.google.android.gms.vision.Frame;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
+import static android.content.ContentValues.TAG;
 
 public class CrimeFragment extends Fragment {
 
@@ -55,6 +55,8 @@ public class CrimeFragment extends Fragment {
     private static final int REQUEST_CONTACT = 1;
     private static final int REQUEST_PHOTO= 2;
 
+    private Context context;
+
     private Crime mCrime;
     private File mPhotoFile;
     private EditText mTitleField;
@@ -64,12 +66,14 @@ public class CrimeFragment extends Fragment {
     private Button mSuspectButton;
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
+
     private ImageView mPhotoView2;
     private ImageView mPhotoView3;
     private ImageView mPhotoView4;
     private CheckBox faceCheckBox;
     private TextView faceText;
-    List<Bitmap> bitmaps = new ArrayList<>();
+    private List<Bitmap> bitmaps;
+    private List<File> photos;
 
 
 
@@ -94,6 +98,7 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        saveData();
 
         CrimeLab.get(getActivity())
                 .updateCrime(mCrime);
@@ -197,13 +202,13 @@ public class CrimeFragment extends Fragment {
                 startActivityForResult(captureImage, REQUEST_PHOTO);
             }
         });
-
+        loadData();
         mPhotoView = (ImageView) v.findViewById(R.id.crime_photo);
         mPhotoView2 = (ImageView) v.findViewById(R.id.crime_photo2);
         mPhotoView3 = (ImageView) v.findViewById(R.id.crime_photo3);
         mPhotoView4 = (ImageView) v.findViewById(R.id.crime_photo4);
         updatePhotoView();
-
+        saveData();
         return v;
 
 
@@ -279,6 +284,7 @@ public class CrimeFragment extends Fragment {
     }
 
     private void updatePhotoView() {
+
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
             mPhotoView2.setImageDrawable(null);
@@ -288,7 +294,9 @@ public class CrimeFragment extends Fragment {
             Bitmap bitmap = PictureUtils.getScaledBitmap(
                     mPhotoFile.getPath(), getActivity());
             bitmaps.add(bitmap);
-            mPhotoView.setImageBitmap(bitmaps.get(0));
+            if(bitmaps.size() == 1) {
+                mPhotoView.setImageBitmap(bitmaps.get(0));
+            }
             if (bitmaps.size() == 2){
                 mPhotoView2.setImageBitmap(bitmaps.get(1));
             }
@@ -299,5 +307,28 @@ public class CrimeFragment extends Fragment {
                 mPhotoView4.setImageBitmap(bitmaps.get(3));
             }
         }
+        Log.d(TAG, "updatePhotoView:  " + bitmaps.size());
+    }
+    private void saveData(){
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("shared preferences,", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(bitmaps);
+        editor.putString("task list",json);
+        editor.apply();
+
+    }
+    private void loadData(){
+
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("shared preferences",Context.MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString("task list", null);
+        Type type = new TypeToken<ArrayList<Bitmap>>(){}.getType();
+        bitmaps = gson.fromJson(json,type);
+
+        if (bitmaps == null){
+            bitmaps = new ArrayList<>();
+        }
+
     }
 }
